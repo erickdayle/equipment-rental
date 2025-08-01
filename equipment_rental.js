@@ -194,57 +194,76 @@ class EquipmentRental {
       return;
     }
 
-    const overallTotalCost = equipmentList.reduce((sum, item) => {
-      return sum + (parseFloat(item.values.cf_total_cost) || 0);
-    }, 0);
+    const availableEquipmentIds = recordData.attributes?.cf_available_equipment;
 
-    console.log(
-      `Calculated Overall Total Cost: ${overallTotalCost.toFixed(2)}`
-    );
+    if (
+      !availableEquipmentIds ||
+      !Array.isArray(availableEquipmentIds) ||
+      availableEquipmentIds.length === 0
+    ) {
+      console.warn(
+        "`cf_available_equipment` is missing or empty. Total cost will be calculated as 0."
+      );
+      await this._updateRecord(recordData.id, {
+        cf_total_equipment_rental_cost: "0.00",
+      });
+    } else {
+      const availableIdSet = new Set(
+        availableEquipmentIds.map((id) => String(id))
+      );
 
-    await this._updateRecord(recordData.id, {
-      cf_total_equipment_rental_cost: overallTotalCost.toFixed(2),
-    });
+      const filteredEquipmentList = equipmentList.filter((item) => {
+        const assetId = item.values?.cf_asset_component_single;
+        return assetId && availableIdSet.has(String(assetId));
+      });
 
-    // --- START: REVISED LOGIC FOR UPDATING ASSOCIATED ASSETS ---
-    console.log(
-      "Starting update of associated assets based on equipment list..."
-    );
+      console.log(
+        `Found ${equipmentList.length} items in list, but only ${filteredEquipmentList.length} are available and will be counted towards the total cost.`
+      );
 
-    // Loop through each item in the equipment list to get specific dates and asset IDs
-    for (const item of equipmentList) {
-      const itemValues = item.values;
-      const assetId = itemValues.cf_asset_component_single;
+      const overallTotalCost = filteredEquipmentList.reduce((sum, item) => {
+        return sum + (parseFloat(item.values.cf_total_cost) || 0);
+      }, 0);
 
-      // Ensure we have an asset ID to update
-      if (!assetId) {
-        console.warn(
-          "Skipping item in equipment list because it's missing an asset/component ID (cf_asset_component_single).",
-          item
-        );
-        continue;
+      console.log(
+        `Calculated Overall Total Cost: ${overallTotalCost.toFixed(2)}`
+      );
+
+      await this._updateRecord(recordData.id, {
+        cf_total_equipment_rental_cost: overallTotalCost.toFixed(2),
+      });
+
+      // --- START: REVISED LOGIC TO UPDATE ONLY AVAILABLE ASSETS ---
+      console.log("Starting update of available associated assets...");
+
+      // Loop through only the filtered list of available equipment.
+      for (const item of filteredEquipmentList) {
+        const itemValues = item.values;
+        const assetId = itemValues.cf_asset_component_single;
+
+        // This check is slightly redundant since the list is pre-filtered, but it's safe to keep.
+        if (!assetId) continue;
+
+        const rentalAttributes = recordData.attributes;
+        const updatePayload = {
+          cf_rental_period_start: itemValues.cf_rental_period_start,
+          cf_rental_period_end: itemValues.cf_rental_period_end,
+          cf_client_name: rentalAttributes.cf_client_project_name,
+          cf_equipment_rental_record: recordData.id,
+          cf_address_line1: rentalAttributes.cf_address_line1,
+          cf_address_line2: rentalAttributes.cf_address_line2,
+          cf_address_city: rentalAttributes.cf_address_city,
+          cf_address_state: rentalAttributes.cf_address_state,
+          cf_address_zip: rentalAttributes.cf_address_zip,
+          cf_address_country: rentalAttributes.cf_address_country,
+        };
+
+        await this._updateRecord(String(assetId), updatePayload);
       }
-
-      const rentalAttributes = recordData.attributes;
-      const updatePayload = {
-        cf_rental_period_start: itemValues.cf_rental_period_start, // Correct: Get from the item
-        cf_rental_period_end: itemValues.cf_rental_period_end, // Correct: Get from the item
-        cf_client_name: rentalAttributes.cf_client_project_name,
-        cf_equipment_rental_record: recordData.id,
-        cf_address_line1: rentalAttributes.cf_address_line1,
-        cf_address_line2: rentalAttributes.cf_address_line2,
-        cf_address_city: rentalAttributes.cf_address_city,
-        cf_address_state: rentalAttributes.cf_address_state,
-        cf_address_zip: rentalAttributes.cf_address_zip,
-        cf_address_country: rentalAttributes.cf_address_country,
-      };
-
-      // The assetId from the table might be a string or number, ensure it's treated correctly.
-      await this._updateRecord(String(assetId), updatePayload);
+      // --- END: REVISED LOGIC TO UPDATE ONLY AVAILABLE ASSETS ---
     }
-    // --- END: REVISED LOGIC FOR UPDATING ASSOCIATED ASSETS ---
 
-    console.log("Finished updating associated assets.");
+    console.log("Finished handling shipment preparation.");
   }
 
   async _handleAssetComponentUpdate(recordId) {
