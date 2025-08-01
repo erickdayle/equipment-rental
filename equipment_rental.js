@@ -97,6 +97,27 @@ class EquipmentRental {
     return null;
   }
 
+  /**
+   * Converts a date string (like MM/DD/YYYY) to an ISO 8601 format string.
+   * @param {string} dateString - The date string to convert.
+   * @returns {string|null} The formatted date string or null if input is invalid.
+   */
+  _formatDateToISO(dateString) {
+    if (!dateString) {
+      return null;
+    }
+    const date = new Date(dateString);
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn(
+        `Invalid date string encountered, cannot format: ${dateString}`
+      );
+      return null;
+    }
+    // Return in YYYY-MM-DDTHH:mm:ss+00:00 format
+    return date.toISOString().split(".")[0] + "+00:00";
+  }
+
   async _updateRecord(recordId, attributesToUpdate) {
     console.log(`\nUpdating record: ${recordId}`);
     console.log(
@@ -233,21 +254,24 @@ class EquipmentRental {
         cf_total_equipment_rental_cost: overallTotalCost.toFixed(2),
       });
 
-      // --- START: REVISED LOGIC TO UPDATE ONLY AVAILABLE ASSETS ---
       console.log("Starting update of available associated assets...");
 
-      // Loop through only the filtered list of available equipment.
       for (const item of filteredEquipmentList) {
         const itemValues = item.values;
         const assetId = itemValues.cf_asset_component_single;
 
-        // This check is slightly redundant since the list is pre-filtered, but it's safe to keep.
         if (!assetId) continue;
 
         const rentalAttributes = recordData.attributes;
         const updatePayload = {
-          cf_rental_period_start: itemValues.cf_rental_period_start,
-          cf_rental_period_end: itemValues.cf_rental_period_end,
+          // --- START: FORMAT DATES TO ISO 8601 ---
+          cf_rental_period_start: this._formatDateToISO(
+            itemValues.cf_rental_period_start
+          ),
+          cf_rental_period_end: this._formatDateToISO(
+            itemValues.cf_rental_period_end
+          ),
+          // --- END: FORMAT DATES TO ISO 8601 ---
           cf_client_name: rentalAttributes.cf_client_project_name,
           cf_equipment_rental_record: recordData.id,
           cf_address_line1: rentalAttributes.cf_address_line1,
@@ -260,7 +284,6 @@ class EquipmentRental {
 
         await this._updateRecord(String(assetId), updatePayload);
       }
-      // --- END: REVISED LOGIC TO UPDATE ONLY AVAILABLE ASSETS ---
     }
 
     console.log("Finished handling shipment preparation.");
