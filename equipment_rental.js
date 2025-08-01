@@ -234,24 +234,27 @@ class EquipmentRental {
   }
 
   async _handleAssetComponentUpdate(recordId) {
+    // --- Temporarily disabled to prevent errors during testing ---
     console.log(
-      "Handling Asset/Component record update. Clearing rental fields."
+      `Skipping Asset/Component update for record ${recordId} as requested for debugging.`
     );
+    /*
+    console.log("Handling Asset/Component record update. Clearing rental fields.");
     const clearPayload = {
-      cf_rental_period_start: "",
-      cf_rental_period_end: "",
-      cf_client_name: "",
-      // removed temporarily to avoid issues
-      // cf_equipment_rental_record: null,
-      cf_address_line1: "",
-      cf_address_line2: "",
-      cf_address_city: "",
-      cf_address_state: "",
-      cf_address_zip: "",
-      cf_address_country: "",
+      cf_rental_period_start: null,
+      cf_rental_period_end: null,
+      cf_client_name: null,
+      cf_equipment_rental_record: null,
+      cf_address_line1: null,
+      cf_address_line2: null,
+      cf_address_city: null,
+      cf_address_state: null,
+      cf_address_zip: null,
+      cf_address_country: null,
     };
     await this._updateRecord(recordId, clearPayload);
     console.log(`Cleared rental fields for record ${recordId}.`);
+    */
   }
 
   // --- PUBLIC MAIN METHOD ---
