@@ -217,7 +217,7 @@ class EquipmentRental {
       cf_rental_period_start: rentalAttributes.cf_rental_period_start,
       cf_rental_period_end: rentalAttributes.cf_rental_period_end,
       cf_client_name: rentalAttributes.cf_client_project_name,
-      cf_equipment_rental_record: rentalAttributes.pkey,
+      cf_equipment_rental_record: recordData.id,
       cf_address_line1: rentalAttributes.cf_address_line1,
       cf_address_line2: rentalAttributes.cf_address_line2,
       cf_address_city: rentalAttributes.cf_address_city,
