@@ -206,30 +206,44 @@ class EquipmentRental {
       cf_total_equipment_rental_cost: overallTotalCost.toFixed(2),
     });
 
-    const assetIds = recordData.attributes?.cf_available_equipment;
-    if (!assetIds || !Array.isArray(assetIds) || assetIds.length === 0) {
-      console.log("No associated assets found in 'cf_available_equipment'.");
-      return;
-    }
+    // --- START: REVISED LOGIC FOR UPDATING ASSOCIATED ASSETS ---
+    console.log(
+      "Starting update of associated assets based on equipment list..."
+    );
 
-    const rentalAttributes = recordData.attributes;
-    const updatePayload = {
-      cf_rental_period_start: rentalAttributes.cf_rental_period_start,
-      cf_rental_period_end: rentalAttributes.cf_rental_period_end,
-      cf_client_name: rentalAttributes.cf_client_project_name,
-      cf_equipment_rental_record: recordData.id,
-      cf_address_line1: rentalAttributes.cf_address_line1,
-      cf_address_line2: rentalAttributes.cf_address_line2,
-      cf_address_city: rentalAttributes.cf_address_city,
-      cf_address_state: rentalAttributes.cf_address_state,
-      cf_address_zip: rentalAttributes.cf_address_zip,
-      cf_address_country: rentalAttributes.cf_address_country,
-    };
+    // Loop through each item in the equipment list to get specific dates and asset IDs
+    for (const item of equipmentList) {
+      const itemValues = item.values;
+      const assetId = itemValues.cf_asset_component_single;
 
-    console.log(`Updating ${assetIds.length} associated asset(s)...`);
-    for (const assetId of assetIds) {
-      await this._updateRecord(assetId, updatePayload);
+      // Ensure we have an asset ID to update
+      if (!assetId) {
+        console.warn(
+          "Skipping item in equipment list because it's missing an asset/component ID (cf_asset_component_single).",
+          item
+        );
+        continue;
+      }
+
+      const rentalAttributes = recordData.attributes;
+      const updatePayload = {
+        cf_rental_period_start: itemValues.cf_rental_period_start, // Correct: Get from the item
+        cf_rental_period_end: itemValues.cf_rental_period_end, // Correct: Get from the item
+        cf_client_name: rentalAttributes.cf_client_project_name,
+        cf_equipment_rental_record: recordData.id,
+        cf_address_line1: rentalAttributes.cf_address_line1,
+        cf_address_line2: rentalAttributes.cf_address_line2,
+        cf_address_city: rentalAttributes.cf_address_city,
+        cf_address_state: rentalAttributes.cf_address_state,
+        cf_address_zip: rentalAttributes.cf_address_zip,
+        cf_address_country: rentalAttributes.cf_address_country,
+      };
+
+      // The assetId from the table might be a string or number, ensure it's treated correctly.
+      await this._updateRecord(String(assetId), updatePayload);
     }
+    // --- END: REVISED LOGIC FOR UPDATING ASSOCIATED ASSETS ---
+
     console.log("Finished updating associated assets.");
   }
 
