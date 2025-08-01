@@ -10,16 +10,18 @@ async function main() {
     process.exit(1);
   }
 
-  // todo: remove env variables, temporarily used for testing
   try {
+    // Correctly use the environment variables loaded by 'dotenv/config'
     const equipmentRental = new EquipmentRental(
-      "https://metrology-sandbox.pscace.com/gateway/v2",
-      "ftmCqFCCHJRmkbZjCVwgHA2pnC2SkiqJ||I1biGemHnUAbrUyoSohobGoe2ByKiYaq"
+      process.env.url,
+      process.env.token
     );
 
     await equipmentRental.processRecordUpdate(recordId);
   } catch (error) {
-    console.error("The script encountered an unrecoverable error.");
+    // The EquipmentRental class constructor now throws specific errors
+    // which will be caught and logged here.
+    console.error("Error during script execution:", error.message);
     process.exit(1);
   }
 }
