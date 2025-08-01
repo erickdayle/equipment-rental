@@ -155,13 +155,6 @@ class EquipmentRental {
       const durationDays = Math.round((endDate - startDate) / MS_PER_DAY) + 1;
       if (durationDays <= 0) continue;
 
-      // --- START: TEMPORARY DEBUGGING CODE ---
-      console.log("--- DEBUG: Overwriting prices for testing ---");
-      values.cf_daily_rental_price = "10.00"; // New hardcoded daily price
-      values.cf_weekly_rental_price = "70.00"; // New hardcoded weekly price
-      values.cf_monthly_rental_price = "300.00"; // New hardcoded monthly price
-      // --- END: TEMPORARY DEBUGGING CODE ---
-
       const quantity = parseFloat(values.cf_quantity_rental) || 0;
       const dailyRate = parseFloat(values.cf_daily_rental_price) || 0;
       const weeklyRate = parseFloat(values.cf_weekly_rental_price) || 0;
