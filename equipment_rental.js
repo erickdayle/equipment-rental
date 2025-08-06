@@ -272,7 +272,7 @@ class EquipmentRental {
             itemValues.cf_rental_period_end
           ),
           // --- END: FORMAT DATES TO ISO 8601 ---
-          cf_client_name: rentalAttributes.cf_client_project_name,
+          cf_client_project_name: rentalAttributes.cf_client_project_name,
           cf_equipment_rental_record: recordData.id,
           cf_address_line1: rentalAttributes.cf_address_line1,
           cf_address_line2: rentalAttributes.cf_address_line2,
@@ -299,7 +299,7 @@ class EquipmentRental {
     const clearPayload = {
       cf_rental_period_start: null,
       cf_rental_period_end: null,
-      cf_client_name: null,
+      cf_client_project_name: null,
       cf_equipment_rental_record: null,
       cf_address_line1: null,
       cf_address_line2: null,
