@@ -152,7 +152,7 @@ class EquipmentRental {
 
   async _handleOnHold(recordData) {
     console.log("Handling 'Equipment On Hold' status.");
-    const equipmentListJson = recordData.attributes?.cf_list_equipment_to_be;
+    const equipmentListJson = recordData.attributes?.cf_equipment_rental_list;
     if (!equipmentListJson) {
       console.log("No equipment list found. Nothing to calculate.");
       return;
@@ -194,14 +194,14 @@ class EquipmentRental {
 
     const updatedEquipmentListJson = JSON.stringify(equipmentList);
     await this._updateRecord(recordData.id, {
-      cf_list_equipment_to_be: updatedEquipmentListJson,
+      cf_equipment_rental_list: updatedEquipmentListJson,
     });
     console.log("Successfully calculated and updated line item costs.");
   }
 
   async _handleShipmentPreparation(recordData) {
     console.log("Handling 'Shipment Preparation' status.");
-    const equipmentListJson = recordData.attributes?.cf_list_equipment_to_be;
+    const equipmentListJson = recordData.attributes?.cf_equipment_rental_list;
     if (!equipmentListJson) {
       console.log("No equipment list found. Cannot process for shipment.");
       return;
